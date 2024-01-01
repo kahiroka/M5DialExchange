@@ -10,7 +10,7 @@ ArduionoJson
 
 ## Usage
 
-1. Setup M5Dial Wi-Fi by using Expressif Esptouch (iOS)
+1. Setup M5Dial Wi-Fi while pressing the button by using Esptouch (iOS)
 2. Setup MQTT server (e.g., Mosquitto)
 3. Publish exchange json data to topic:kabusapi/exchange
 
