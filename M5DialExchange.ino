@@ -3,7 +3,7 @@
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
 
-const char *MQTT_ADDR = "192.168.100.5";
+const char *MQTT_ADDR = "192.168.128.139";
 const int MQTT_PORT = 1883;
 const char *MQTT_CID = "M5Dial";
 const char *MQTT_TOPIC = "kabusapi/exchange";
@@ -15,11 +15,11 @@ long g_dial_offset = 0;
 
 void setUpDownColor(int old_val, int new_val) {
   if (old_val > new_val) {
-    M5Dial.Display.setTextColor(CYAN);
+    M5Dial.Display.setTextColor(CYAN, BLACK);
   } else if (old_val < new_val) {
-    M5Dial.Display.setTextColor(RED);
+    M5Dial.Display.setTextColor(RED, BLACK);
   } else {
-    M5Dial.Display.setTextColor(WHITE);
+    M5Dial.Display.setTextColor(WHITE, BLACK);
   }
 }
 
@@ -35,31 +35,33 @@ void updateExchange(double BidPrice, double AskPrice, double Spread) {
     int ask1 = ask1000%1000/10;
     int ask2 = ask1000%10;
 
-    M5Dial.Display.clearDisplay(TFT_BLACK);
+    M5Dial.Display.startWrite();
+    //M5Dial.Display.clearDisplay(TFT_BLACK);
 
     M5Dial.Display.setTextSize(0.5);
-    M5Dial.Display.setTextColor(WHITE);
+    M5Dial.Display.setTextColor(LIGHTGREY, BLACK); // WHITE
     M5Dial.Display.drawString("BID  USD/JPY  ASK", M5Dial.Display.width() / 2, M5Dial.Display.height() * 2.5 / 10);
 
     setUpDownColor(old_bid, bid1000);
     old_bid = bid1000;
     M5Dial.Display.setTextSize(1.5);
-    M5Dial.Display.drawString(String(bid0 + g_dial_offset), M5Dial.Display.width() / 4, M5Dial.Display.height() * 4 / 10);
-    M5Dial.Display.drawString(String(bid1), M5Dial.Display.width() * 5 / 24, M5Dial.Display.height() * 6 / 10);
+    M5Dial.Display.drawString(" " + String(bid0 + g_dial_offset) + " ", M5Dial.Display.width() / 4, M5Dial.Display.height() * 4 / 10);
+    M5Dial.Display.drawString(" " + String(bid1) + " ", M5Dial.Display.width() * 5 / 24, M5Dial.Display.height() * 6 / 10);
     M5Dial.Display.setTextSize(0.75);
-    M5Dial.Display.drawString(String(bid2), M5Dial.Display.width() * 10.5 / 24, M5Dial.Display.height() * 6.5 / 10);
+    M5Dial.Display.drawString(" " + String(bid2) + " ", M5Dial.Display.width() * 10.5 / 24, M5Dial.Display.height() * 6.5 / 10);
 
     setUpDownColor(old_ask, ask1000);
     old_ask = ask1000;
     M5Dial.Display.setTextSize(1.5);
-    M5Dial.Display.drawString(String(ask0 + g_dial_offset), M5Dial.Display.width() * 3 / 4, M5Dial.Display.height() * 4 / 10);
-    M5Dial.Display.drawString(String(ask1), M5Dial.Display.width() * 17 / 24, M5Dial.Display.height() * 6 / 10);
+    M5Dial.Display.drawString(" " + String(ask0 + g_dial_offset) + " ", M5Dial.Display.width() * 3 / 4, M5Dial.Display.height() * 4 / 10);
+    M5Dial.Display.drawString(" " + String(ask1) + " ", M5Dial.Display.width() * 17 / 24, M5Dial.Display.height() * 6 / 10);
     M5Dial.Display.setTextSize(0.75);
-    M5Dial.Display.drawString(String(ask2), M5Dial.Display.width() * 22.5 / 24, M5Dial.Display.height() * 6.5 / 10);
+    M5Dial.Display.drawString(" " + String(ask2) + " ", M5Dial.Display.width() * 22.5 / 24, M5Dial.Display.height() * 6.5 / 10);
 
     M5Dial.Display.setTextSize(0.5);
-    M5Dial.Display.setTextColor(WHITE);
-    M5Dial.Display.drawString("SPREAD " + String(Spread), M5Dial.Display.width() / 2, M5Dial.Display.height() * 7.5 / 10);
+    M5Dial.Display.setTextColor(LIGHTGREY, BLACK); // WHITE
+    M5Dial.Display.drawString(" SPREAD " + String(Spread) + " ", M5Dial.Display.width() / 2, M5Dial.Display.height() * 7.5 / 10);
+    M5Dial.Display.endWrite();
 }
 
 StaticJsonDocument<200> doc;
@@ -74,10 +76,12 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
 }
 
 void printStatus(String message) {
+  M5Dial.Display.startWrite();
   M5Dial.Display.clearDisplay(TFT_BLACK);
   M5Dial.Display.setTextColor(WHITE);
   M5Dial.Display.setTextSize(0.5);
   M5Dial.Display.drawString(message, M5Dial.Display.width() / 2, M5Dial.Display.height() / 2);
+  M5Dial.Display.endWrite();
 }
 
 void setupWiFi() {
@@ -135,6 +139,7 @@ void loop() {
   // put your main code here, to run repeatedly:
   if(!mqttClient.connected()){
     connectMqtt();
+    M5Dial.Display.clearDisplay(TFT_BLACK);
   }
   mqttClient.loop();
 
