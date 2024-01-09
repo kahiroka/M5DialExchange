@@ -13,13 +13,15 @@ PubSubClient mqttClient(client);
 
 long g_dial_offset = 0;
 
+M5Canvas canvas(&(M5Dial.Display));
+
 void setUpDownColor(int old_val, int new_val) {
   if (old_val > new_val) {
-    M5Dial.Display.setTextColor(CYAN, BLACK);
+    canvas.setTextColor(CYAN, BLACK);
   } else if (old_val < new_val) {
-    M5Dial.Display.setTextColor(RED, BLACK);
+    canvas.setTextColor(RED, BLACK);
   } else {
-    M5Dial.Display.setTextColor(WHITE, BLACK);
+    canvas.setTextColor(WHITE, BLACK);
   }
 }
 
@@ -36,28 +38,50 @@ void updateExchange(double BidPrice, double AskPrice, double Spread) {
     int ask2 = ask1000%10;
 
     M5Dial.Display.startWrite();
-    //M5Dial.Display.clearDisplay(TFT_BLACK);
-
     M5Dial.Display.setTextSize(0.5);
     M5Dial.Display.setTextColor(LIGHTGREY, BLACK); // WHITE
     M5Dial.Display.drawString("BID  USD/JPY  ASK", M5Dial.Display.width() / 2, M5Dial.Display.height() * 2.5 / 10);
+    M5Dial.Display.endWrite();
 
     setUpDownColor(old_bid, bid1000);
     old_bid = bid1000;
-    M5Dial.Display.setTextSize(1.5);
-    M5Dial.Display.drawString(" " + String(bid0 + g_dial_offset) + " ", M5Dial.Display.width() / 4, M5Dial.Display.height() * 4 / 10);
-    M5Dial.Display.drawString(" " + String(bid1) + " ", M5Dial.Display.width() * 5 / 24, M5Dial.Display.height() * 6 / 10);
-    M5Dial.Display.setTextSize(0.75);
-    M5Dial.Display.drawString(" " + String(bid2) + " ", M5Dial.Display.width() * 10.5 / 24, M5Dial.Display.height() * 6.5 / 10);
+
+    M5Dial.Display.startWrite();
+    canvas.fillSprite(TFT_BLACK);
+    canvas.setTextSize(1.5);
+    canvas.drawString(String(bid0 + g_dial_offset), 60, 25);
+    canvas.pushSprite(0,70);
+    M5Dial.Display.endWrite();
+
+    M5Dial.Display.startWrite();
+    canvas.fillSprite(TFT_BLACK);
+    canvas.setTextSize(1.5);
+    canvas.drawString(String(bid1), 48, 25);
+    canvas.setTextSize(0.75);
+    canvas.drawString(String(bid2), 102, 36);
+    canvas.pushSprite(0,120);
+    M5Dial.Display.endWrite();
 
     setUpDownColor(old_ask, ask1000);
     old_ask = ask1000;
-    M5Dial.Display.setTextSize(1.5);
-    M5Dial.Display.drawString(" " + String(ask0 + g_dial_offset) + " ", M5Dial.Display.width() * 3 / 4, M5Dial.Display.height() * 4 / 10);
-    M5Dial.Display.drawString(" " + String(ask1) + " ", M5Dial.Display.width() * 17 / 24, M5Dial.Display.height() * 6 / 10);
-    M5Dial.Display.setTextSize(0.75);
-    M5Dial.Display.drawString(" " + String(ask2) + " ", M5Dial.Display.width() * 22.5 / 24, M5Dial.Display.height() * 6.5 / 10);
 
+    M5Dial.Display.startWrite();
+    canvas.fillSprite(TFT_BLACK);
+    canvas.setTextSize(1.5);
+    canvas.drawString(String(ask0 + g_dial_offset), 60, 25);
+    canvas.pushSprite(120,70);
+    M5Dial.Display.endWrite();
+
+    M5Dial.Display.startWrite();
+    canvas.fillSprite(TFT_BLACK);
+    canvas.setTextSize(1.5);
+    canvas.drawString(String(ask1), 48, 25);
+    canvas.setTextSize(0.75);
+    canvas.drawString(String(ask2), 102, 36);
+    canvas.pushSprite(120,120);
+    M5Dial.Display.endWrite();
+
+    M5Dial.Display.startWrite();
     M5Dial.Display.setTextSize(0.5);
     M5Dial.Display.setTextColor(LIGHTGREY, BLACK); // WHITE
     M5Dial.Display.drawString(" SPREAD " + String(Spread) + " ", M5Dial.Display.width() / 2, M5Dial.Display.height() * 7.5 / 10);
@@ -130,6 +154,10 @@ void setup() {
   M5Dial.Display.setTextDatum(middle_center);
   M5Dial.Display.setTextFont(&fonts::Orbitron_Light_32);
   M5Dial.Encoder.write(0);
+
+  canvas.createSprite(120, 50);
+  canvas.setTextDatum(middle_center);
+  canvas.setTextFont(&fonts::Orbitron_Light_32);
 
   setupWiFi();
   mqttClient.setServer(MQTT_ADDR, MQTT_PORT);
