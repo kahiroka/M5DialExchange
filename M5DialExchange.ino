@@ -15,6 +15,8 @@ long g_dial_offset = 0;
 
 M5Canvas canvas(&(M5Dial.Display));
 
+portMUX_TYPE mutex_draw = portMUX_INITIALIZER_UNLOCKED;
+
 void setUpDownColor(int old_val, int new_val) {
   if (old_val > new_val) {
     canvas.setTextColor(CYAN, BLACK);
@@ -89,13 +91,21 @@ void updateExchange(double BidPrice, double AskPrice, double Spread) {
 }
 
 StaticJsonDocument<200> doc;
+double g_BidPrice = 0.0;
+double g_AskPrice = 0.0;
+double g_Spread = 0.0;
 void mqttCallback(char* topic, byte* payload, unsigned int length) {
   DeserializationError err = deserializeJson(doc, payload);
   if (!err) {
     double BidPrice = (double)doc["BidPrice"];
     double AskPrice = (double)doc["AskPrice"];
     double Spread = (double)doc["Spread"];
+    portENTER_CRITICAL(&mutex_draw);
+    g_BidPrice = BidPrice;
+    g_AskPrice = AskPrice;
+    g_Spread = Spread;
     updateExchange(BidPrice, AskPrice, Spread);
+    portEXIT_CRITICAL(&mutex_draw);
   }
 }
 
@@ -164,6 +174,7 @@ void setup() {
 }
 
 void loop() {
+  static long old_dial_offset = 0;
   // put your main code here, to run repeatedly:
   if(!mqttClient.connected()){
     connectMqtt();
@@ -173,6 +184,15 @@ void loop() {
 
   M5Dial.update();
   g_dial_offset = M5Dial.Encoder.read();
+  if (old_dial_offset != g_dial_offset) {
+    portENTER_CRITICAL(&mutex_draw);
+    double BidPrice = g_BidPrice;
+    double AskPrice = g_AskPrice;
+    double Spread = g_Spread;
+    updateExchange(BidPrice, AskPrice, Spread);
+    portEXIT_CRITICAL(&mutex_draw);
+    old_dial_offset = g_dial_offset;
+  }
   if (M5Dial.BtnA.wasPressed()) {
     M5Dial.Encoder.write(0);
   }
